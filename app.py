@@ -1,17 +1,18 @@
 import streamlit as st
+from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-st.title("DEMO TIME!")
+st.title("Demo using psycopg3 and psycopg_pool!")
 
 
 @st.experimental_singleton
 def get_connection_pool():
     pool = ConnectionPool(
-        conninfo="postgresql://myuser:mypass@localhost:5432/thedatabase",
+        conninfo="postgres://reader:NWDMCE5xdipIjRrp@hh-pgsql-public.ebi.ac.uk:5432/pfmegrnargs",
         min_size=1,
         max_size=2,
     )
-    print(f"Connection pool created successfully using postgreSQL")
+    print("Connection pool created successfully using PostgreSQL")
     return pool
 
 
@@ -24,17 +25,17 @@ if clear_memo_cache:
 @st.experimental_memo
 def get_data(limit=4):
     pool = get_connection_pool()
+    pool.check()
+
     with pool.connection(timeout=4) as conn:
-        print(f"CONNECTION ID: {id(conn)}, {conn}")
-        with conn.cursor() as curs:
-            curs.execute("SELECT * FROM movies ORDER BY id LIMIT %s", (limit,))
+        print(f"Connection ID: {id(conn)}, {conn}")
+        with conn.cursor(row_factory=dict_row) as curs:
+            curs.execute("SELECT * FROM rnc_database ORDER BY id LIMIT %s", (limit,))
             data = curs.fetchall()
-            print(f"Data fetched successfully")
+            print("Data fetched successfully")
     return data
 
 
-limit = st.number_input("Limit", min_value=1, max_value=10, value=4)
-
+limit = st.number_input("Limit", min_value=10, max_value=50, value=10, step=10)
 my_data = get_data(limit=limit)
-
-st.table(my_data)
+st.dataframe(my_data)
