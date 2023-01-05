@@ -1,4 +1,4 @@
 streamlit-nightly
 psycopg2-binary
-psycopg
+psycopg[binary]
 psycopg-pool
